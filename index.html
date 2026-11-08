@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sudoku</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--g1:#4f7cff;--g2:#a45cff;--g3:#ff7eb3;--card:#fff;--tint:#eaf0ff;--ink:#25236b;--line:#c9d0ee;--thick:#5a55c8;--ok:#0d9b5c;--okbg:#d9f7e7;--s:max(260px,min(94vw,calc(100dvh - 340px),540px));color-scheme:light;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--g1:#1b2a6b;--g2:#3b1f77;--g3:#6b2060;--card:#1d2147;--tint:#262b5a;--ink:#eef0ff;--line:#3a4080;--thick:#8f95f0;--ok:#5df0a5;--okbg:#12402c;color-scheme:dark}}
+:root[data-theme="dark"]{--g1:#1b2a6b;--g2:#3b1f77;--g3:#6b2060;--card:#1d2147;--tint:#262b5a;--ink:#eef0ff;--line:#3a4080;--thick:#8f95f0;--ok:#5df0a5;--okbg:#12402c;color-scheme:dark}
+html{height:100%;background:linear-gradient(165deg,var(--g1),var(--g2) 55%,var(--g3))}
+body{height:100%;margin:0;font-family:"Fredoka",system-ui,sans-serif;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;overscroll-behavior:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+header{width:var(--s);display:flex;align-items:center;justify-content:space-between}
+h1{margin:0;font-size:42px;text-shadow:0 3px 0 rgba(0,0,0,.2)}
+#lvl{background:#ffd23f;color:#3a2a00;font-weight:700;font-size:20px;padding:6px 16px;border-radius:99px;box-shadow:0 3px 0 rgba(0,0,0,.2)}
+.prog{width:var(--s);display:flex;align-items:center;gap:12px;font-size:18px;font-weight:500}
+.bar{flex:1;height:14px;border-radius:99px;background:rgba(255,255,255,.3);overflow:hidden}
+#fill{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#ffd23f,#3ddc84);transition:width .4s}
+.bw{position:relative;width:var(--s);height:var(--s)}
+#board{display:grid;grid-template-columns:repeat(9,1fr);width:100%;height:100%;border-radius:12px;overflow:hidden;background:var(--card);box-shadow:0 0 0 4px var(--thick),0 14px 30px rgba(0,0,0,.35);touch-action:none}
+.c{display:flex;align-items:center;justify-content:center;min-width:0;box-sizing:border-box;border:1px solid var(--line);font-size:calc(var(--s)/14);font-weight:700;color:var(--ink);background:var(--card)}
+.a{background:var(--tint)}
+.br{border-right:3px solid var(--thick)}
+.bb{border-bottom:3px solid var(--thick)}
+.rel{box-shadow:inset 0 0 0 100px rgba(255,196,120,.16)}
+.same{box-shadow:inset 0 0 0 100px rgba(58,160,255,.35)}
+.ok{color:var(--ok);background:var(--okbg);animation:pop .4s}
+.bad{color:#fff;background:#ff4d5e;animation:shake .5s}
+#cur{position:absolute;left:0;top:0;width:11.111%;height:11.111%;box-sizing:border-box;border:3px solid #ffbf69;border-radius:10px;pointer-events:none;transition:transform .12s ease-out;box-shadow:0 0 0 3px rgba(255,255,255,.85),0 0 12px 3px rgba(255,191,105,.4);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 3px rgba(255,255,255,.85),0 0 16px 5px rgba(255,191,105,.5)}}
+@keyframes pop{50%{transform:scale(1.35)}}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+#msg{margin:0;min-height:28px;font-size:22px;font-weight:700;text-align:center;text-shadow:0 2px 0 rgba(0,0,0,.2)}
+#pal{display:grid;grid-template-columns:repeat(9,1fr);gap:5px;width:var(--s)}
+#pal button{height:66px;padding:0;font:inherit;font-size:32px;font-weight:700;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.25);border:0;border-radius:14px;box-shadow:0 5px 0 rgba(0,0,0,.28);touch-action:manipulation}
+#pal button:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(0,0,0,.28)}
+#pal button.done{opacity:.3}
+#win{position:fixed;inset:0;background:rgba(10,10,50,.65);display:none;align-items:center;justify-content:center;z-index:30}
+#win div{background:var(--card);color:var(--ink);padding:28px 34px;border-radius:22px;text-align:center;max-width:80vw}
+#win h2{margin:0 0 6px;font-size:34px}
+#win p{margin:0 0 18px;font-size:22px}
+#next{font:inherit;font-size:24px;font-weight:700;color:#fff;background:#3ddc84;border:0;border-radius:16px;padding:12px 28px;box-shadow:0 5px 0 rgba(0,0,0,.25)}
+.cf{position:fixed;top:-20px;width:10px;height:14px;z-index:40;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+</style>
+</head>
+<body>
+<header><h1>Sudoku</h1><span id="lvl"></span></header>
+<div class="prog"><div class="bar"><i id="fill"></i></div><span>Faltan <b id="left"></b></span></div>
+<div class="bw"><div id="board"></div><div id="cur"></div></div>
+<p id="msg"></p>
+<div id="pal"></div>
+<div id="win"><div><h2>🎉 ¡Nivel superado!</h2><p id="wmsg"></p><button id="next">Siguiente nivel ▶</button></div></div>
+
+<script>
+const $=s=>document.querySelector(s), B=$('#board'), P=$('#pal'), K=$('#cur'), M=$('#msg');
+const COL=['#ff5d73','#ff8c1a','#f5b700','#2fcf75','#14b8a6','#3a9bff','#6a6cff','#b05cff','#ff5fa8'];
+let sol,giv,cur,bad={},at=0,level=1,won=false,total=1,cells=[],base=[];
+try{level=+localStorage.getItem('sudoku_level')||1}catch(e){}
+
+// ---- solver / generador ----
+function mask(g,i){const r=i/9|0,c=i%9;let m=0;
+  for(let k=0;k<9;k++){m|=1<<g[r*9+k];m|=1<<g[k*9+c]}
+  const br=r-r%3,bc=c-c%3;
+  for(let a=0;a<3;a++)for(let b=0;b<3;b++)m|=1<<g[(br+a)*9+bc+b];
+  return ~m&1022}
+function pick(g){let best=-1,bm=0,bn=10;
+  for(let i=0;i<81;i++)if(!g[i]){const m=mask(g,i);let n=0;for(let x=m;x;x&=x-1)n++;
+    if(n<bn){bn=n;best=i;bm=m;if(n<2)break}}
+  return[best,bm]}
+function count(g,lim){const[i,m]=pick(g);if(i<0)return 1;let t=0;
+  for(let d=1;d<10&&t<lim;d++)if(m>>d&1){g[i]=d;t+=count(g,lim-t);g[i]=0}
+  return t}
+function fill(g){const[i,m]=pick(g);if(i<0)return true;
+  const ds=[1,2,3,4,5,6,7,8,9].filter(d=>m>>d&1).sort(()=>Math.random()-.5);
+  for(const d of ds){g[i]=d;if(fill(g))return true}
+  g[i]=0;return false}
+function make(){
+  const s=Array(81).fill(0);fill(s);
+  const p=s.slice(),target=Math.min(30+level*3,58);
+  let rem=0;
+  for(const i of [...Array(81).keys()].sort(()=>Math.random()-.5)){
+    if(rem>=target)break;
+    const v=p[i];p[i]=0;
+    if(count(p.slice(),2)===1)rem++;else p[i]=v}
+  return[s,p]}
+
+// ---- tablero ----
+function build(){
+  for(let i=0;i<81;i++){
+    const r=i/9|0,c=i%9,box=(r/3|0)*3+(c/3|0);
+    base[i]='c'+(box%2?' a':'')+(c%3==2&&c<8?' br':'')+(r%3==2&&r<8?' bb':'');
+    const d=document.createElement('div');B.appendChild(d);cells.push(d)}
+  for(let n=1;n<10;n++){const b=document.createElement('button');
+    b.textContent=n;b.dataset.n=n;b.style.background=COL[n-1];P.appendChild(b)}}
+
+function paint(){
+  const v0=cur[at],r=at/9|0,c=at%9;
+  cells.forEach((d,i)=>{
+    let k=base[i];
+    d.textContent=bad[i]||cur[i]||'';
+    if(bad[i])k+=' bad';
+    else{
+      const R=i/9|0,C=i%9;
+      if(R===r||C===c||((R/3|0)===(r/3|0)&&(C/3|0)===(c/3|0)))k+=' rel';
+      if(v0&&cur[i]===v0)k+=' same';
+      if(cur[i]&&!giv[i])k+=' ok'}
+    d.className=k});
+  K.style.transform='translate('+c*100+'%,'+r*100+'%)';
+  P.querySelectorAll('button').forEach(b=>
+    b.classList.toggle('done',cur.filter(x=>x===+b.dataset.n).length>=9));
+  const left=cur.filter(x=>!x).length;
+  $('#left').textContent=left;
+  $('#fill').style.width=(100*(total-left)/total)+'%'}
+
+function say(t){M.textContent=t}
+function save(){try{localStorage.setItem('sudoku_save',JSON.stringify({level,sol,giv,cur}))}catch(e){}}
+
+function place(n){
+  const i=at;
+  if(won||bad[i])return;
+  if(giv[i]||cur[i]){say('Mueve el cuadro a una casilla vacía');return}
+  if(n===sol[i]){
+    cur[i]=n;paint();save();
+    say(['¡Muy bien!','¡Genial!','¡Eso es!','¡Perfecto!','¡Bravo!'][Math.random()*5|0]);
+    if(!cur.includes(0))win()}
+  else{
+    bad[i]=n;paint();say('Ese no va ahí, prueba otro');
+    try{navigator.vibrate&&navigator.vibrate(120)}catch(e){}
+    setTimeout(()=>{delete bad[i];paint()},800)}}
+
+function confetti(){
+  for(let i=0;i<70;i++){
+    const d=document.createElement('div');d.className='cf';
+    d.style.left=Math.random()*100+'vw';
+    d.style.background=COL[i%9];
+    d.style.animationDuration=2+Math.random()*2+'s';
+    d.style.animationDelay=Math.random()*.8+'s';
+    document.body.appendChild(d);setTimeout(()=>d.remove(),5000)}}
+
+function win(){
+  won=true;level++;
+  try{localStorage.setItem('sudoku_level',level);localStorage.removeItem('sudoku_save')}catch(e){}
+  confetti();
+  $('#wmsg').textContent='Ahora toca el nivel '+level;
+  setTimeout(()=>$('#win').style.display='flex',700)}
+
+function setup(s,g,c){
+  sol=s;giv=g;cur=c;bad={};won=false;
+  total=cur.filter(x=>!x).length||1;
+  at=Math.max(0,cur.indexOf(0));
+  $('#win').style.display='none';
+  $('#lvl').textContent='⭐ Nivel '+level;
+  say('Desliza el cuadro y elige un número');
+  paint()}
+function start(){
+  const[s,p]=make();
+  setup(s,p.map(v=>!!v),p.slice());save()}
+function resume(){
+  try{const d=JSON.parse(localStorage.getItem('sudoku_save'));
+    if(d&&d.level===level&&d.cur.includes(0)){setup(d.sol,d.giv,d.cur);return true}}catch(e){}
+  return false}
+
+// ---- cursor: arrastrar por el tablero ----
+let drag=false;
+function cellAt(e){
+  const r=B.getBoundingClientRect(),cl=v=>Math.min(8,Math.max(0,Math.floor(v*9)));
+  return cl((e.clientY-r.top)/r.height)*9+cl((e.clientX-r.left)/r.width)}
+function go(e){const i=cellAt(e);if(i!==at){at=i;paint()}}
+B.addEventListener('pointerdown',e=>{if(won)return;drag=true;B.setPointerCapture(e.pointerId);go(e);e.preventDefault()});
+B.addEventListener('pointermove',e=>{if(drag)go(e)});
+B.addEventListener('pointerup',()=>drag=false);
+B.addEventListener('pointercancel',()=>drag=false);
+
+P.addEventListener('click',e=>{const b=e.target.closest('button');if(b)place(+b.dataset.n)});
+$('#next').onclick=start;
+document.addEventListener('contextmenu',e=>e.preventDefault());
+build();if(!resume())start();
+</script>
+</body>
+</html>
