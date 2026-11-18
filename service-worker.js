@@ -1,5 +1,5 @@
 // Si cambias algo en la app, sube el numero de version para que los moviles se actualicen
-const CACHE = 'vr-sudoku-v2';
+const CACHE = 'vr-sudoku-v3';
 const FILES = [
   './',
   'index.html',
@@ -18,7 +18,7 @@ self.addEventListener('install', e => {
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(keys => Promise.all(keys.filter(k => (k.startsWith("vr-sudoku-") || k === "vr-sudoku-v2") && k !== CACHE).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
