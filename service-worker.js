@@ -1,5 +1,5 @@
 // Si cambias algo en la app, sube el numero de version para que los moviles se actualicen
-const CACHE = 'sudoku-v1';
+const CACHE = 'vr-sudoku-v2';
 const FILES = [
   './',
   'index.html',

@@ -1,5 +1,6 @@
 {
   "name": "Sudoku",
+  "id": "/vr-sudoku",
   "short_name": "Sudoku",
   "description": "Sudoku facil y colorido",
   "lang": "es",
